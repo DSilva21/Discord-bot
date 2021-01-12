@@ -19,4 +19,4 @@ async def on_message(message):  # 메시지가 들어 올 때마다 가동되는
 
 
 
-client.run("Nzk4MDgzMTkyMzI1NTM3ODIy.X_v25A.Y5PgSAm1eHh70vVD8cRNCNianmQ")
+client.run("token")
