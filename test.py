@@ -5,13 +5,13 @@ import time
 import random
 
 from discord.ext import commands
+from discord.ext import tasks
 
 TOKEN = ""
 
 bot = commands.Bot(command_prefix='!')  # 명령어 접두사는 !  디스코드 봇 객체
 
 saving = []
-
 
 
 def setEmbed(Title, Footer, Name, Icon_Url, Description, Color, Inline, Thumbnail, **kwargs):
@@ -41,8 +41,8 @@ save_embed = setEmbed(Title="경뿌 연탐정보", Footer="연탐알리미.", De
 
 
 # 정보 저장함수
-def save_data(place, start, fin, cnt):
-    saving.append([place, start, fin, cnt])
+def save_data(place, start, fin, cnt, saved_time):
+    saving.append([place, start, fin, cnt, saved_time])
 
 
 
@@ -53,8 +53,21 @@ embed1.set_author(name="만빵", icon_url="https://cdn.discordapp.com/attachment
 embed1.set_thumbnail(url= "https://cdn.discordapp.com/attachments/798083672477138990/798755603374931968/image.PNG")
 embed1.add_field(name="필드1", value="필드1의 값", inline=False)
 embed1.add_field(name="필드2", value="필드2의 값", inline=False)
-embed1.add_field(name="필드3", value="필드3의 값", inline=False)
 embed1.set_footer(text="푸터")"""
+
+"""
+@tasks.loop(seconds=3600)
+async def my_background_task():
+    await bot.get_guild(798083672477138987).get_channel(798083672477138990).send("hi")
+    await asyncio.sleep(600)
+"""
+
+# 시간 알리미
+@tasks.loop(seconds=1)
+async def notice():
+    if datetime.datetime.now().minute == 32 and datetime.datetime.now().second == 0:
+        await bot.get_guild(798083672477138987).get_channel(798083672477138990).send("현재 {}시 {}분 입니다.".format(datetime.datetime.now().hour, datetime.datetime.now().minute), tts=True)
+        time.sleep(1)
 
 
 @bot.event
@@ -64,6 +77,9 @@ async def on_ready():  # 봇이 준비가 되면 1회 실행되는 부분
     game = discord.Game("디스코드")
     print(f'{bot.user} online!')
     await bot.change_presence(status=discord.Status.online, activity=game)
+    notice.start()
+    # my_background_task.start()
+
 
 
 @bot.event
@@ -76,6 +92,10 @@ async def on_message(message):
 
     if message.content.startswith("안녕"):
         await message.channel.send("안녕하세요")  # 이 구문은 메시지가 보내진 채널에 메시지를 보내는 구문입니다.
+
+    if message.content.startswith("음성"):
+        txt = saving[0][0]
+        await message.channel.send(f'{txt} 경뿌 1분전', tts=True)
 
 
 @bot.command(name='주사위', help='주사위를 돌립니다. 입력양식: !주사위 숫자 ex) !주사위 5')  # name은 명령어의 이름 , ctx 매개변수안에는 context 객체
@@ -120,12 +140,18 @@ async def alarm_error(ctx, error):
 
 @bot.command(name="연탐")
 async def save_time(ctx, txt, start: int, fin: int, cnt: int):
-    save_data(txt, start, fin, cnt)
-    i = len(saving)
-    save_embed.add_field(name="%s" % str(saving[i-1][0]),
-                         value="%s분 ,%s분 %s회 연탐입니다. " % (str(saving[i-1][1]), str(saving[i-1][2]), str(saving[i-1][3])),
-                         inline=False)
-    await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
+    x = start-fin
+    if abs(x) == 30:
+        saved_time = datetime.datetime.now()
+        save_data(txt, start, fin, cnt, saved_time)
+        i = len(saving)
+        save_embed.add_field(name="%s " % str(saving[i - 1][0]),
+                             value="%s분 ,%s분 %s회 연탐입니다. " % (
+                             str(saving[i - 1][1]), str(saving[i - 1][2]), str(saving[i - 1][3]) ),
+                             inline=False)
+        await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
+    else:
+        await ctx.send("잘못된 입력입니다.")
 
 
 @save_time.error
@@ -145,4 +171,12 @@ async def delete(ctx):
     await ctx.send(embed=save_embed)
 
 
+@bot.command(name="음성")
+async def say(ctx):
+    txt = saving[0][0]
+    await ctx.send(f'{txt} 경뿌 1분전 ', tts=True)
+
+
 bot.run(TOKEN)
+
+
