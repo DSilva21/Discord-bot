@@ -7,7 +7,7 @@ import random
 from discord.ext import commands
 from discord.ext import tasks
 
-TOKEN = ""
+TOKEN = 
 
 bot = commands.Bot(command_prefix='!')  # 명령어 접두사는 !  디스코드 봇 객체
 
@@ -62,12 +62,28 @@ async def my_background_task():
     await asyncio.sleep(600)
 """
 
+
 # 시간 알리미
 @tasks.loop(seconds=1)
 async def notice():
     if datetime.datetime.now().minute == 32 and datetime.datetime.now().second == 0:
         await bot.get_guild(798083672477138987).get_channel(798083672477138990).send("현재 {}시 {}분 입니다.".format(datetime.datetime.now().hour, datetime.datetime.now().minute), tts=True)
         time.sleep(1)
+
+
+@tasks.loop(seconds=1)
+async def alimi():
+    saving_len = len(saving)
+    for i in range(saving_len):
+        if (datetime.datetime.now().minute == int(saving[i][1]-1)) and datetime.datetime.now().second == 0:
+            await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전', tts=True)
+            time.sleep(1)
+        if (datetime.datetime.now().minute == int(saving[i][2]-1)) and datetime.datetime.now().second == 0:
+            await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전', tts=True)
+            time.sleep(1)
+
+# 오류있음
+
 
 
 @bot.event
@@ -78,6 +94,7 @@ async def on_ready():  # 봇이 준비가 되면 1회 실행되는 부분
     print(f'{bot.user} online!')
     await bot.change_presence(status=discord.Status.online, activity=game)
     notice.start()
+    alimi.start()
     # my_background_task.start()
 
 
