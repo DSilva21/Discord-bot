@@ -74,15 +74,25 @@ async def notice():
 @tasks.loop(seconds=1)
 async def alimi():
     saving_len = len(saving)
+    remove_flag = 0
+    remove_index = []
     for i in range(saving_len):
-        if (datetime.datetime.now().minute == int(saving[i][1]-1)) and datetime.datetime.now().second == 0:
+        if ((datetime.datetime.now().minute == int(saving[i][1]-1)) and datetime.datetime.now().second == 0) or \
+                ((datetime.datetime.now().minute == int(saving[i][2]-1)) and datetime.datetime.now().second == 0):
+            saving[i][3] -= 1
             await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전', tts=True)
-            time.sleep(1)
-        if (datetime.datetime.now().minute == int(saving[i][2]-1)) and datetime.datetime.now().second == 0:
-            await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전', tts=True)
+            if saving[i][3] == 0:
+                save_embed.remove_field(i)
+                remove_index.append(i)
+                await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 종료')
+                time.sleep(1)
+
+    if len(remove_index) >= 1:
+        for x in range(len(remove_index)):
+            saving.pop(remove_index[x])
             time.sleep(1)
 
-# 오류있음
+
 
 
 
@@ -164,7 +174,7 @@ async def save_time(ctx, txt, start: int, fin: int, cnt: int):
         i = len(saving)
         save_embed.add_field(name="%s " % str(saving[i - 1][0]),
                              value="%s분 ,%s분 %s회 연탐입니다. " % (
-                             str(saving[i - 1][1]), str(saving[i - 1][2]), str(saving[i - 1][3]) ),
+                             str(saving[i - 1][1]), str(saving[i - 1][2]), str(saving[i - 1][3])),
                              inline=False)
         await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
     else:
