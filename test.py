@@ -41,9 +41,8 @@ save_embed = setEmbed(Title="경뿌 연탐정보", Footer="연탐알리미.", De
 
 
 # 정보 저장함수
-def save_data(place, start, fin, cnt, saved_time):
-    saving.append([place, start, fin, cnt, saved_time])
-
+def save_data(place, start, fin, cnt, saved_time, timer):
+    saving.append([place, start, fin, cnt, saved_time, timer])
 
 
 """
@@ -66,8 +65,10 @@ async def my_background_task():
 # 시간 알리미
 @tasks.loop(seconds=1)
 async def notice():
-    if datetime.datetime.now().minute == 32 and datetime.datetime.now().second == 0:
-        await bot.get_guild(798083672477138987).get_channel(798083672477138990).send("현재 {}시 {}분 입니다.".format(datetime.datetime.now().hour, datetime.datetime.now().minute), tts=True)
+    bot_id = bot.user.id
+    if datetime.datetime.now().minute == 9 and datetime.datetime.now().second == 0:
+        await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(
+            "현재 {}시 {}분 입니다.".format(datetime.datetime.now().hour, datetime.datetime.now().minute), tts=True)
         time.sleep(1)
 
 
@@ -77,10 +78,19 @@ async def alimi():
     remove_flag = 0
     remove_index = []
     for i in range(saving_len):
-        if ((datetime.datetime.now().minute == int(saving[i][1]-1)) and datetime.datetime.now().second == 0) or \
-                ((datetime.datetime.now().minute == int(saving[i][2]-1)) and datetime.datetime.now().second == 0):
-            saving[i][3] -= 1
-            await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전', tts=True)
+        if ((datetime.datetime.now().minute == int(saving[i][1] - 1)) and datetime.datetime.now().second == 0) or \
+                ((datetime.datetime.now().minute == int(saving[i][2] - 1)) and datetime.datetime.now().second == 0):
+            saving[i][3] -= 1  # cnt
+            await bot.get_guild(798083672477138987).get_channel(798083672477138990).send(f'{saving[i][0]} 경뿌 1분전',
+                                                                                         tts=True)
+
+            saving[i][4] += 1  # saved_time
+            save_embed.set_field_at(i, name="%s " % str(saving[i][0]),
+                                    value="%s분 ,%s분 %s회 연탐입니다. (%d/%s)" % (
+                                        str(saving[i][1]), str(saving[i][2]), str(saving[i][3]), saving[i][4],
+                                        str(saving[i][5])),
+                                    inline=False)
+
             if saving[i][3] == 0:
                 save_embed.remove_field(i)
                 remove_index.append(i)
@@ -93,20 +103,17 @@ async def alimi():
             time.sleep(1)
 
 
-
-
-
 @bot.event
 async def on_ready():  # 봇이 준비가 되면 1회 실행되는 부분
     print(bot.user.id)
     print("ready")
     game = discord.Game("디스코드")
     print(f'{bot.user} online!')
+
     await bot.change_presence(status=discord.Status.online, activity=game)
     notice.start()
     alimi.start()
     # my_background_task.start()
-
 
 
 @bot.event
@@ -148,11 +155,6 @@ async def time_now(ctx):
     await ctx.send(embed=embed)
 
 
-@bot.command(name='테스트')
-async def test_embed(ctx):
-    await ctx.send(embed=sample)
-
-
 @bot.command(name="알람")
 async def alarm(ctx, sleep_time: int):
     await ctx.send(f'알람 {sleep_time}초 카운트 시작')
@@ -167,14 +169,15 @@ async def alarm_error(ctx, error):
 
 @bot.command(name="연탐")
 async def save_time(ctx, txt, start: int, fin: int, cnt: int):
-    x = start-fin
+    x = start - fin
     if abs(x) == 30:
-        saved_time = datetime.datetime.now()
-        save_data(txt, start, fin, cnt, saved_time)
-        i = len(saving)
-        save_embed.add_field(name="%s " % str(saving[i - 1][0]),
-                             value="%s분 ,%s분 %s회 연탐입니다. " % (
-                             str(saving[i - 1][1]), str(saving[i - 1][2]), str(saving[i - 1][3])),
+        saved_time = 0
+        save_data(txt, start, fin, cnt, saved_time, cnt)
+        l = len(saving)
+        save_embed.add_field(name="%s " % str(saving[l - 1][0]),
+                             value="%s분 ,%s분 %s회 연탐입니다. (%d/%s)" % (
+                                 str(saving[l - 1][1]), str(saving[l - 1][2]), str(saving[l - 1][3]), 0,
+                                 str(saving[l - 1][3])),
                              inline=False)
         await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
     else:
@@ -205,5 +208,3 @@ async def say(ctx):
 
 
 bot.run(TOKEN)
-
-
