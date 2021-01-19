@@ -16,7 +16,7 @@ ids = []
 
 
 def setEmbed(Title, Footer, Description, Color, Thumbnail, **kwargs):
-    embed = discord.Embed(title=Title, description=Description, color=Color)
+    embed = discord.Embed(title=Title, description=Description, color=Color, timestamp=datetime.datetime.utcnow())
     # embed.set_author(name=Name, icon_url=Icon_Url)
     embed.set_thumbnail(url=Thumbnail)
     for x in kwargs.keys():
@@ -56,11 +56,12 @@ async def flag_notice_12():
 
 @tasks.loop(seconds=1)
 async def alimi():
-    saving_len = len(saving)
+
     remove_flag = 0
     remove_index = []
+    same = []
     flag = 0
-    for i in range(saving_len):
+    for i in range(len(saving)):
 
         if saving[i][1] == 0:  # start가 0이면 -1이 되므로 60으로 변환
             saving[i][1] = 60
@@ -71,18 +72,21 @@ async def alimi():
 
             if flag >= 1:
                 saving[i][1] = 0
+
             saving[i][3] -= 1  # cnt
-            for t in range(len(ids)):
+
+            for t in range(len(ids)):  # 동작중인 서버에 메시지 뿌림
                 await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'```{saving[i][0]} 경뿌 1분전```',
                                                                            tts=True)
 
             saving[i][4] += 1  # saved_time
             save_embed.set_field_at(i, name="%s " % str(saving[i][0]),
                                     value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (i + 1,
-                                                                                      str(saving[i][1]),
-                                                                                      str(saving[i][2]),
-                                                                                      str(saving[i][3]), saving[i][4],
-                                                                                      str(saving[i][5])),
+                                                                                                    str(saving[i][1]),
+                                                                                                    str(saving[i][2]),
+                                                                                                    str(saving[i][3]),
+                                                                                                    saving[i][4],
+                                                                                                    str(saving[i][5])),
                                     inline=False)
 
             if saving[i][3] == 0:  # cnt=0이되면 연탐 정보 삭제
@@ -90,7 +94,6 @@ async def alimi():
                     await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'{saving[i][0]} 경뿌 종료')
                 save_embed.remove_field(i)
                 remove_index.append(i)
-                time.sleep(1)
 
         if saving[i][1] == 60:  # start가 60으로 바뀌었다면 다시 0으로 변경..
             saving[i][1] = 0
@@ -98,7 +101,6 @@ async def alimi():
     if len(remove_index) >= 1:
         for x in range(len(remove_index)):
             saving.pop(remove_index[x])
-            time.sleep(1)
 
 
 @bot.event
@@ -128,6 +130,9 @@ async def on_message(message):
     channel = message.channel.id
     save_id(server, channel)
 
+@bot.command(name='리스트')
+async def show_list(ctx):
+    await ctx.send(saving)
 
 @bot.command(name='안녕')
 async def hello(ctx):
@@ -154,10 +159,10 @@ async def save_time(ctx, txt, start: int, fin: int, cnt: int):
         l = len(saving)
         save_embed.add_field(name="%s" % str(saving[l - 1][0]),
                              value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (l,
-                                                                                    str(saving[l - 1][1]),
-                                                                                    str(saving[l - 1][2]),
-                                                                                    str(saving[l - 1][3]), 0,
-                                                                                    str(saving[l - 1][3])),
+                                                                                             str(saving[l - 1][1]),
+                                                                                             str(saving[l - 1][2]),
+                                                                                             str(saving[l - 1][3]), 0,
+                                                                                             str(saving[l - 1][3])),
                              inline=False)
         await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
     else:
@@ -177,6 +182,15 @@ async def show_id(ctx):
 
 @bot.command(name="알려줘")
 async def show_time1(ctx):
+    for x in range(len(saving)):  # 번호를 붙혀서 업데이트
+        save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
+                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (x + 1,
+                                                                                                str(saving[x][1]),
+                                                                                                str(saving[x][2]),
+                                                                                                str(saving[x][3]),
+                                                                                                saving[x][4],
+                                                                                                str(saving[x][5])),
+                                inline=False)
     await ctx.send(embed=save_embed)
 
 
@@ -194,9 +208,11 @@ async def delete(ctx, index: int):
     for x in range(len(saving)):  # 번호를 붙혀서 업데이트
         save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
                                 value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (x + 1,
-                                                                               str(saving[x][1]), str(saving[x][2]),
-                                                                               str(saving[x][3]), saving[x][4],
-                                                                               str(saving[x][5])),
+                                                                                                str(saving[x][1]),
+                                                                                                str(saving[x][2]),
+                                                                                                str(saving[x][3]),
+                                                                                                saving[x][4],
+                                                                                                str(saving[x][5])),
                                 inline=False)
     await ctx.send(embed=save_embed)
 
