@@ -15,9 +15,9 @@ saving = []
 ids = []
 
 
-def setEmbed(Title, Footer, Name, Icon_Url, Description, Color, Inline, Thumbnail, **kwargs):
+def setEmbed(Title, Footer, Description, Color, Thumbnail, **kwargs):
     embed = discord.Embed(title=Title, description=Description, color=Color)
-    embed.set_author(name=Name, icon_url=Icon_Url)
+    # embed.set_author(name=Name, icon_url=Icon_Url)
     embed.set_thumbnail(url=Thumbnail)
     for x in kwargs.keys():
         embed.add_field(name=x, value=kwargs[x], inline=Inline)
@@ -25,10 +25,7 @@ def setEmbed(Title, Footer, Name, Icon_Url, Description, Color, Inline, Thumbnai
     return embed
 
 
-save_embed = setEmbed(Title="경뿌 연탐정보", Footer="연탐알리미.", Description="저장된 연탐목록 입니다.", Color=0xff0000,
-                      Name="경뿌알리미", Icon_Url="https://cdn.discordapp.com/attachments/"
-                                             "798083672477138990/798755603374931968/image.PNG",
-                      Inline=False,
+save_embed = setEmbed(Title="경뿌 연탐정보", Footer="`by 만빵`", Description="`연탐 목록`", Color=0xff0000,
                       Thumbnail="https://cdn.discordapp.com/attachments/798083672477138990/798755603374931968/image.PNG"
                       )
 
@@ -76,15 +73,16 @@ async def alimi():
                 saving[i][1] = 0
             saving[i][3] -= 1  # cnt
             for t in range(len(ids)):
-                await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'{saving[i][0]} 경뿌 1분전',
-                                                                       tts=True)
+                await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'```{saving[i][0]} 경뿌 1분전```',
+                                                                           tts=True)
 
             saving[i][4] += 1  # saved_time
             save_embed.set_field_at(i, name="%s " % str(saving[i][0]),
-                                    value="%d: %s분 ,%s분 %s회 연탐 남았습니다. (%d/%s)" % (i + 1,
-                                                                                  str(saving[i][1]), str(saving[i][2]),
-                                                                                  str(saving[i][3]), saving[i][4],
-                                                                                  str(saving[i][5])),
+                                    value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (i + 1,
+                                                                                      str(saving[i][1]),
+                                                                                      str(saving[i][2]),
+                                                                                      str(saving[i][3]), saving[i][4],
+                                                                                      str(saving[i][5])),
                                     inline=False)
 
             if saving[i][3] == 0:  # cnt=0이되면 연탐 정보 삭제
@@ -138,7 +136,7 @@ async def hello(ctx):
 
 @bot.command(name='시간')
 async def time_now(ctx):
-    embed = discord.Embed(title="현재 시간", description="현재 시간을 알려드립니다",
+    embed = discord.Embed(title="현재 시간", description="`현재 시간을 알려드립니다`",
                           color=0xff0000, timestamp=datetime.datetime.utcnow())
     await ctx.send(embed=embed)
 
@@ -154,11 +152,12 @@ async def save_time(ctx, txt, start: int, fin: int, cnt: int):
 
         save_data(txt, start, fin, cnt, saved_time, cnt)
         l = len(saving)
-        save_embed.add_field(name="%s " % str(saving[l - 1][0]),
-                             value="%d: %s분 ,%s분, %s회 연탐입니다. (%d/%s)" % (l,
-                                                                         str(saving[l - 1][1]), str(saving[l - 1][2]),
-                                                                         str(saving[l - 1][3]), 0,
-                                                                         str(saving[l - 1][3])),
+        save_embed.add_field(name="%s" % str(saving[l - 1][0]),
+                             value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (l,
+                                                                                    str(saving[l - 1][1]),
+                                                                                    str(saving[l - 1][2]),
+                                                                                    str(saving[l - 1][3]), 0,
+                                                                                    str(saving[l - 1][3])),
                              inline=False)
         await ctx.send(f'{txt} {start}분~{fin}분 경뿌 {cnt}연탐 저장되었습니다')
     else:
@@ -194,7 +193,7 @@ async def delete(ctx, index: int):
     await ctx.send(f'{index} 번 연탐 정보 삭제.')
     for x in range(len(saving)):  # 번호를 붙혀서 업데이트
         save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
-                                value="%d:  %s분 ,%s분 %s회 연탐 남았습니다. (%d/%s)" % (x + 1,
+                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (x + 1,
                                                                                str(saving[x][1]), str(saving[x][2]),
                                                                                str(saving[x][3]), saving[x][4],
                                                                                str(saving[x][5])),
