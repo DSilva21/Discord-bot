@@ -16,7 +16,7 @@ ids = []
 
 
 def setEmbed(Title, Footer, Description, Color, Thumbnail, **kwargs):
-    embed = discord.Embed(title=Title, description=Description, color=Color, timestamp=datetime.datetime.utcnow())
+    embed = discord.Embed(title=Title, description=Description, color=Color)
     # embed.set_author(name=Name, icon_url=Icon_Url)
     embed.set_thumbnail(url=Thumbnail)
     for x in kwargs.keys():
@@ -56,7 +56,6 @@ async def flag_notice_12():
 
 @tasks.loop(seconds=1)
 async def alimi():
-
     remove_flag = 0
     remove_index = []
     same = []
@@ -73,12 +72,13 @@ async def alimi():
             if flag >= 1:
                 saving[i][1] = 0
 
-            saving[i][3] -= 1  # cnt
-
             for t in range(len(ids)):  # 동작중인 서버에 메시지 뿌림
                 await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'```{saving[i][0]} 경뿌 1분전```',
                                                                            tts=True)
 
+        if ((datetime.datetime.now().minute == int(saving[i][1])) and datetime.datetime.now().second == 0) or \
+                ((datetime.datetime.now().minute == int(saving[i][2])) and datetime.datetime.now().second == 0):
+            saving[i][3] -= 1  # cnt
             saving[i][4] += 1  # saved_time
             save_embed.set_field_at(i, name="%s " % str(saving[i][0]),
                                     value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (i + 1,
@@ -130,9 +130,15 @@ async def on_message(message):
     channel = message.channel.id
     save_id(server, channel)
 
+
+@bot.event
+async def on_member_join(ctx):
+    await ctx.send("ㅎㅇ")
+
 @bot.command(name='리스트')
 async def show_list(ctx):
     await ctx.send(saving)
+
 
 @bot.command(name='안녕')
 async def hello(ctx):
@@ -151,6 +157,7 @@ async def save_time(ctx, txt, start: int, fin: int, cnt: int):
     server = ctx.guild.id
     channel = ctx.channel.id
     save_id(server, channel)
+
     x = start - fin
     if abs(x) == 30:
         saved_time = 0
@@ -182,14 +189,24 @@ async def show_id(ctx):
 
 @bot.command(name="알려줘")
 async def show_time1(ctx):
+    timenow = datetime.datetime.utcnow().minute
     for x in range(len(saving)):  # 번호를 붙혀서 업데이트
+        a = saving[x][1]-timenow
+        b = saving[x][2]-timenow
+
+        if a > 0 and b > 0:
+            tmax = a if a < b else b
+        else:
+            tmax = a if a > b else b
+
         save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
-                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (x + 1,
-                                                                                                str(saving[x][1]),
-                                                                                                str(saving[x][2]),
-                                                                                                str(saving[x][3]),
-                                                                                                saving[x][4],
-                                                                                                str(saving[x][5])),
+                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐, %d분 남았습니다!\n(%d/%s)```" % (x + 1,
+                                                                                                     str(saving[x][1]),
+                                                                                                     str(saving[x][2]),
+                                                                                                     str(saving[x][3]),
+                                                                                                     tmax,
+                                                                                                     saving[x][4],
+                                                                                                     str(saving[x][5])),
                                 inline=False)
     await ctx.send(embed=save_embed)
 
@@ -214,7 +231,7 @@ async def delete(ctx, index: int):
                                                                                                 saving[x][4],
                                                                                                 str(saving[x][5])),
                                 inline=False)
-    await ctx.send(embed=save_embed)
+    # await ctx.send(embed=save_embed)
 
 
 @delete.error
