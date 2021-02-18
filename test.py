@@ -7,7 +7,7 @@ import random
 from discord.ext import commands
 from discord.ext import tasks
 
-TOKEN = "Nzk4MDgzMTkyMzI1NTM3ODIy.X_v25A.ev4QqQj_aC9V2b2hDt2sR0zwzh8"
+TOKEN = ""
 
 bot = commands.Bot(command_prefix='!')  # 명령어 접두사는 !  디스코드 봇 객체
 
@@ -31,8 +31,8 @@ save_embed = setEmbed(Title="경뿌 연탐정보", Footer="`by 만빵`", Descrip
 
 
 # 정보 저장함수
-def save_data(place, start, fin, cnt, saved_time, timer):
-    saving.append([place, start, fin, cnt, saved_time, timer])
+def save_data(place, start, fin, cnt, saved_time, timer, userid):
+    saving.append([place, start, fin, cnt, saved_time, timer, userid])
 
 
 def save_id(server_id, channel_id):
@@ -157,12 +157,13 @@ async def save_time(ctx, txt, start: int, fin: int, cnt: int):
     server = ctx.guild.id
     channel = ctx.channel.id
     save_id(server, channel)
+    userid = ctx.message.author
 
     x = start - fin
     if abs(x) == 30:
         saved_time = 0
 
-        save_data(txt, start, fin, cnt, saved_time, cnt)
+        save_data(txt, start, fin, cnt, saved_time, cnt, userid)
         l = len(saving)
         save_embed.add_field(name="%s" % str(saving[l - 1][0]),
                              value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐 남았습니다!\n(%d/%s)```" % (l,
@@ -204,14 +205,17 @@ async def show_time1(ctx):
         else:
             tmax = a
 
+        name = str(saving[x][6])
+
         save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
-                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐, %d분 남았습니다!\n(%d/%s)```" % (x + 1,
+                                value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐, %d분 남았습니다!\n(%d/%s) added by %s```" % (x + 1,
                                                                                                      str(saving[x][1]),
                                                                                                      str(saving[x][2]),
                                                                                                      str(saving[x][3]),
                                                                                                      tmax,
                                                                                                      saving[x][4],
-                                                                                                     str(saving[x][5])),
+                                                                                                     str(saving[x][5]),
+                                                                                                     name[:-5]),
                                 inline=False)
     await ctx.send(embed=save_embed)
 
