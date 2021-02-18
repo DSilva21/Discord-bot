@@ -7,7 +7,7 @@ import random
 from discord.ext import commands
 from discord.ext import tasks
 
-TOKEN = 
+TOKEN = "Nzk4MDgzMTkyMzI1NTM3ODIy.X_v25A.ev4QqQj_aC9V2b2hDt2sR0zwzh8"
 
 bot = commands.Bot(command_prefix='!')  # 명령어 접두사는 !  디스코드 봇 객체
 
@@ -69,12 +69,15 @@ async def alimi():
         if ((datetime.datetime.now().minute == int(saving[i][1] - 1)) and datetime.datetime.now().second == 0) or \
                 ((datetime.datetime.now().minute == int(saving[i][2] - 1)) and datetime.datetime.now().second == 0):
 
-            if flag >= 1:
+            if flag == 1:
                 saving[i][1] = 0
 
             for t in range(len(ids)):  # 동작중인 서버에 메시지 뿌림
                 await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'```{saving[i][0]} 경뿌 1분전```',
                                                                            tts=True)
+
+        if saving[i][1] == 60:
+            saving[i][1] = 0
 
         if ((datetime.datetime.now().minute == int(saving[i][1])) and datetime.datetime.now().second == 0) or \
                 ((datetime.datetime.now().minute == int(saving[i][2])) and datetime.datetime.now().second == 0):
@@ -94,9 +97,6 @@ async def alimi():
                     await bot.get_guild(ids[t][0]).get_channel(ids[t][1]).send(f'{saving[i][0]} 경뿌 종료')
                 save_embed.remove_field(i)
                 remove_index.append(i)
-
-        if saving[i][1] == 60:  # start가 60으로 바뀌었다면 다시 0으로 변경..
-            saving[i][1] = 0
 
     if len(remove_index) >= 1:
         for x in range(len(remove_index)):
@@ -191,13 +191,18 @@ async def show_id(ctx):
 async def show_time1(ctx):
     timenow = datetime.datetime.utcnow().minute
     for x in range(len(saving)):  # 번호를 붙혀서 업데이트
-        a = saving[x][1]-timenow
-        b = saving[x][2]-timenow
+        a = saving[x][1]+60-timenow
+        b = saving[x][2]+60-timenow
 
-        if a > 0 and b > 0:
-            tmax = a if a < b else b
+        if a > 60:
+            a = a-60
+        if b > 60:
+            b = b-60
+            
+        if a > b:
+            tmax = b
         else:
-            tmax = a if a > b else b
+            tmax = a
 
         save_embed.set_field_at(x, name="%s " % str(saving[x][0]),
                                 value="```diff\n!%d:\n- %s분 ,%s분, %s회 연탐, %d분 남았습니다!\n(%d/%s)```" % (x + 1,
