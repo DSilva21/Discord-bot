@@ -1,5 +1,4 @@
 # Discord-bot
-discord bot
 
 연탐봇 
 
